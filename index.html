@@ -375,17 +375,20 @@
         document.addEventListener('DOMContentLoaded', async () => {
             const { jsPDF } = window.jspdf;
 
-            // INSERIDO O SEU CÓDIGO DE CONFIGURAÇÃO DO FIREBASE
-            const firebaseConfig = {
-                apiKey: "AIzaSyBOWoJRYCC7CYBvtieuS8tJ5XkTKfUHDuQ",
-                authDomain: "inventario-ded36.firebaseapp.com",
-                projectId: "inventario-ded36",
-                storageBucket: "inventario-ded36.firebasestorage.app",
-                messagingSenderId: "381290321142",
-                appId: "1:381290321142:web:e8ca2b55437e74deeb88d7"
-            };
+            // Utiliza a configuração dinâmica fornecida pelo ambiente, se disponível.
+            // Caso contrário, usa a configuração que você forneceu.
+            const firebaseConfig = typeof __firebase_config !== 'undefined' 
+                ? JSON.parse(__firebase_config) 
+                : {
+                    apiKey: "AIzaSyBOWoJRYCC7CYBvtieuS8tJ5XkTKfUHDuQ",
+                    authDomain: "inventario-ded36.firebaseapp.com",
+                    projectId: "inventario-ded36",
+                    storageBucket: "inventario-ded36.firebasestorage.app",
+                    messagingSenderId: "381290321142",
+                    appId: "1:381290321142:web:e8ca2b55437e74deeb88d7"
+                };
             
-            const appId = firebaseConfig.appId;
+            const appId = firebaseConfig.appId || 'default-inventory-app';
 
             let app, db, auth, userId, userName = 'Anónimo', html5QrCode;
             let allArtigos = [], allObras = [], allMovimentos = [];
@@ -765,7 +768,7 @@
                         }
                     });
                     if (importedCount > 0) { await batch.commit(); }
-                    showNotification(`${importedCount} obras importadas. ${skippedCount} ignoradas (já existiam).`, 'success');
+                    showNotification(`${importedCount} obras importadas. ${skippedCount} ignorados (já existiam).`, 'success');
                     document.getElementById('import-obras-text-modal').classList.add('hidden');
                 } catch(error) { console.error("Erro ao importar obras: ", error); showNotification("Ocorreu um erro na importação.", "error");
                 } finally { btn.disabled = false; btn.textContent = 'Confirmar Importação'; }
@@ -864,7 +867,7 @@
 
                 saveSettingsBtn.addEventListener('click', async () => {
                     const newName = userNameInput.value.trim();
-                    if (newName) {
+                    if (newName && userId) {
                         const userDocRef = doc(db, usersPath, userId);
                         await setDoc(userDocRef, { name: newName }, { merge: true });
                         userName = newName;
@@ -955,19 +958,16 @@
                         onSnapshot(query(collection(db, artigosPath)), (snapshot) => { 
                             allArtigos = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                             filterAndRenderArtigos();
-                        });
+                        }, (error) => { console.error("Erro no listener de artigos:", error); showNotification("Erro ao carregar artigos.", "error"); });
                         onSnapshot(query(collection(db, obrasPath)), (snapshot) => { 
                             allObras = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                             filterAndRenderObras();
-                        });
+                        }, (error) => { console.error("Erro no listener de obras:", error); showNotification("Erro ao carregar obras.", "error"); });
                         onSnapshot(query(collection(db, movimentosPath)), (snapshot) => { 
                             allMovimentos = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                             allMovimentos.sort((a, b) => (b.data_movimento?.seconds ?? 0) - (a.data_movimento?.seconds ?? 0));
                             renderMovimentos(allMovimentos);
-                        });
-                    } else {
-                        loadingMessage.textContent = 'Falha na autenticação. A recarregar...';
-                        loadingMessage.classList.add('text-red-500');
+                        }, (error) => { console.error("Erro no listener de movimentos:", error); showNotification("Erro ao carregar movimentos.", "error"); });
                     }
                 });
 
