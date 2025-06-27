@@ -78,7 +78,7 @@
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
-            <p class="mt-4 text-slate-500">A iniciar e a autenticar...</p>
+            <p id="loading-message" class="mt-4 text-slate-500">A iniciar e a autenticar...</p>
         </div>
         
         <!-- NOVO ROSTO DA APP (DASHBOARD) -->
@@ -341,8 +341,8 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, doc, addDoc, getDoc, getDocs, onSnapshot, query, where, writeBatch, serverTimestamp, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, doc, addDoc, getDoc, getDocs, onSnapshot, query, where, writeBatch, serverTimestamp, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         
         // --- Service Worker Registration ---
         if ('serviceWorker' in navigator) {
@@ -375,9 +375,17 @@
         document.addEventListener('DOMContentLoaded', async () => {
             const { jsPDF } = window.jspdf;
 
-            // Esta configuração será fornecida automaticamente pelo ambiente do Gemini
-            const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
-            const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-inventory-app';
+            // INSERIDO O SEU CÓDIGO DE CONFIGURAÇÃO DO FIREBASE
+            const firebaseConfig = {
+                apiKey: "AIzaSyBOWoJRYCC7CYBvtieuS8tJ5XkTKfUHDuQ",
+                authDomain: "inventario-ded36.firebaseapp.com",
+                projectId: "inventario-ded36",
+                storageBucket: "inventario-ded36.firebasestorage.app",
+                messagingSenderId: "381290321142",
+                appId: "1:381290321142:web:e8ca2b55437e74deeb88d7"
+            };
+            
+            const appId = firebaseConfig.appId;
 
             let app, db, auth, userId, userName = 'Anónimo', html5QrCode;
             let allArtigos = [], allObras = [], allMovimentos = [];
@@ -391,6 +399,7 @@
 
             // DOM Elements
             const loadingScreen = document.getElementById('loading-screen');
+            const loadingMessage = document.getElementById('loading-message');
             const dashboardView = document.getElementById('dashboard-view');
             const detailView = document.getElementById('detail-view');
             const detailTitle = document.getElementById('detail-title');
@@ -927,9 +936,16 @@
                     if (user) {
                         userId = user.uid;
                         const userDocRef = doc(db, usersPath, userId);
-                        const userDocSnap = await getDoc(userDocRef);
-                        if (userDocSnap.exists() && userDocSnap.data().name) { userName = userDocSnap.data().name; }
                         
+                        try {
+                            const userDocSnap = await getDoc(userDocRef);
+                            if (userDocSnap.exists() && userDocSnap.data().name) {
+                                userName = userDocSnap.data().name;
+                            }
+                        } catch (error) {
+                            console.warn("Não foi possível carregar o perfil do utilizador. Usando nome 'Anónimo'. Error:", error);
+                        }
+
                         userNameDisplayDashboard.textContent = userName;
                         userNameInput.value = userName;
 
@@ -949,25 +965,18 @@
                             allMovimentos.sort((a, b) => (b.data_movimento?.seconds ?? 0) - (a.data_movimento?.seconds ?? 0));
                             renderMovimentos(allMovimentos);
                         });
+                    } else {
+                        loadingMessage.textContent = 'Falha na autenticação. A recarregar...';
+                        loadingMessage.classList.add('text-red-500');
                     }
                 });
 
-                // Tentativa de autenticação robusta
-                try {
-                    const authToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
-                    if (authToken) {
-                        await signInWithCustomToken(auth, authToken);
-                    } else {
-                        await signInAnonymously(auth);
-                    }
-                } catch (authError) {
-                    console.warn("Falha no login com token personalizado, a recorrer ao modo anónimo.", authError);
-                    await signInAnonymously(auth);
-                }
+                await signInAnonymously(auth);
 
             } catch (error) { 
                 console.error("Erro fatal na inicialização: ", error); 
-                loadingScreen.innerHTML = `<p class="text-red-500">Ocorreu um erro crítico ao iniciar a aplicação. Verifique a consola.</p>`; 
+                loadingMessage.textContent = 'Ocorreu um erro crítico. Verifique a consola.';
+                loadingMessage.classList.add('text-red-500');
             }
         });
 
