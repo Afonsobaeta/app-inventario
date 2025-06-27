@@ -1,0 +1,21 @@
+{
+  "name": "Gestão de Inventário",
+  "short_name": "Inventário",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#f0f2f5",
+  "theme_color": "#4f46e5",
+  "description": "App para gestão de inventário com QR Code.",
+  "icons": [
+    {
+      "src": "images/icon-192x192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "images/icon-512x512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ]
+}
