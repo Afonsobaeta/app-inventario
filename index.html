@@ -252,7 +252,7 @@
                     <input type="hidden" id="selected-obra-id">
                 </div>
                 <p id="usage-error-msg" class="text-red-500 text-sm mb-4 text-center h-5"></p>
-                <div class="flex items-center justify-end space-x-3"><button type="button" id="cancel-usage-btn" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold py-2 px-4 rounded-lg">Cancelar</button><button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-5 rounded-lg">Confirmar</button></div>
+                <div class="flex items-center justify-end space-x-3"><button type="button" class="close-modal-btn bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold py-2 px-4 rounded-lg">Cancelar</button><button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-5 rounded-lg">Confirmar</button></div>
             </form>
         </div>
     </div>
@@ -277,20 +277,16 @@
                     <input type="hidden" id="edit-selected-obra-id">
                 </div>
                 <p id="edit-movement-error-msg" class="text-red-500 text-sm mb-4 text-center h-5"></p>
-                <div class="flex items-center justify-end space-x-3">
-                    <button type="button" id="cancel-edit-movement-btn" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold py-2 px-4 rounded-lg">Cancelar</button>
-                    <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-5 rounded-lg">Guardar Alterações</button>
-                </div>
+                <div class="flex items-center justify-end space-x-3"><button type="button" class="close-modal-btn bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold py-2 px-4 rounded-lg">Cancelar</button><button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-5 rounded-lg">Guardar Alterações</button></div>
             </form>
         </div>
     </div>
-    <!-- NOVO: Modal de confirmação genérico -->
     <div id="generic-confirm-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop hidden">
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-sm p-6 fade-in">
             <h3 id="confirm-title" class="text-xl font-semibold mb-2">Confirmar Ação</h3>
             <p id="confirm-message" class="text-slate-600 mb-6">Tem a certeza?</p>
             <div class="flex items-center justify-end space-x-3">
-                <button type="button" id="cancel-action-btn" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold py-2 px-4 rounded-lg">Cancelar</button>
+                <button type="button" class="close-modal-btn bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold py-2 px-4 rounded-lg">Cancelar</button>
                 <button type="button" id="confirm-action-btn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-5 rounded-lg">Confirmar</button>
             </div>
         </div>
@@ -302,7 +298,7 @@
              <form id="add-artigo-form">
                  <div class="mb-4"><label for="artigo-ref" class="block text-sm font-medium text-slate-700">Referência</label><input type="text" id="artigo-ref" required class="mt-1 w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"></div>
                  <div class="mb-4"><label for="artigo-nome" class="block text-sm font-medium text-slate-700">Nome do Artigo</label><input type="text" id="artigo-nome" required class="mt-1 w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"></div>
-                 <div class="flex items-center justify-end space-x-3"><button type="button" id="cancel-add-artigo-btn" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold py-2 px-4 rounded-lg">Cancelar</button><button type="submit" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-5 rounded-lg">Guardar</button></div>
+                 <div class="flex items-center justify-end space-x-3"><button type="button" class="close-modal-btn bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold py-2 px-4 rounded-lg">Cancelar</button><button type="submit" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-5 rounded-lg">Guardar</button></div>
              </form>
          </div>
      </div>
@@ -313,7 +309,7 @@
                  <div class="mb-4"><label for="obra-numero" class="block text-sm font-medium text-slate-700">Nº da Obra</p><input type="text" id="obra-numero" required class="mt-1 w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"></div>
                  <div class="mb-4"><label for="obra-nome" class="block text-sm font-medium text-slate-700">Nome da Obra</p><input type="text" id="obra-nome" required class="mt-1 w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"></div>
                  <div class="mb-4"><label for="obra-cliente" class="block text-sm font-medium text-slate-700">Cliente</p><input type="text" id="obra-cliente" required class="mt-1 w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"></div>
-                 <div class="flex items-center justify-end space-x-3"><button type="button" id="cancel-add-obra-btn" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold py-2 px-4 rounded-lg">Cancelar</button><button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-5 rounded-lg">Guardar</button></div>
+                 <div class="flex items-center justify-end space-x-3"><button type="button" class="close-modal-btn bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold py-2 px-4 rounded-lg">Cancelar</button><button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-5 rounded-lg">Guardar</button></div>
              </form>
          </div>
      </div>
@@ -335,7 +331,7 @@
                  <div id="artigos-text-import-summary" class="mt-4 text-sm font-medium"></div>
              </div>
              <div class="mt-auto pt-4 flex items-center justify-end space-x-3">
-                 <button type="button" id="cancel-import-artigos-text-btn" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold py-2 px-4 rounded-lg">Cancelar</button>
+                 <button type="button" class="close-modal-btn bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold py-2 px-4 rounded-lg">Cancelar</button>
                  <button type="button" id="confirm-import-artigos-btn" class="bg-sky-500 hover:bg-sky-600 text-white font-bold py-2 px-5 rounded-lg hidden">Confirmar Importação</button>
              </div>
          </div>
@@ -358,7 +354,7 @@
                  <div id="obras-text-import-summary" class="mt-4 text-sm font-medium"></div>
              </div>
              <div class="mt-auto pt-4 flex items-center justify-end space-x-3">
-                 <button type="button" id="cancel-import-obras-text-btn" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold py-2 px-4 rounded-lg">Cancelar</button>
+                 <button type="button" class="close-modal-btn bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold py-2 px-4 rounded-lg">Cancelar</button>
                  <button type="button" id="confirm-import-obras-btn" class="bg-teal-500 hover:bg-teal-600 text-white font-bold py-2 px-5 rounded-lg hidden">Confirmar Importação</button>
              </div>
          </div>
@@ -383,7 +379,7 @@
                  </div>
              </div>
              <div class="mt-6 flex items-center justify-end space-x-3">
-                 <button type="button" id="cancel-export-pdf-btn" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold py-2 px-4 rounded-lg">Cancelar</button>
+                 <button type="button" class="close-modal-btn bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold py-2 px-4 rounded-lg">Cancelar</button>
                  <button type="button" id="confirm-export-pdf-btn" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-5 rounded-lg">Gerar PDF</button>
              </div>
          </div>
@@ -838,10 +834,13 @@
                 backToDashboardBtn.addEventListener('click', showDashboard);
 
                 // --- Modais ---
+                document.querySelectorAll('.close-modal-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        btn.closest('.modal-backdrop').classList.add('hidden');
+                    });
+                });
                 document.getElementById('close-scanner-btn').addEventListener('click', stopScanner);
-                document.getElementById('cancel-usage-btn').addEventListener('click', () => registerUsageModal.classList.add('hidden'));
-                document.getElementById('cancel-edit-movement-btn').addEventListener('click', () => editMovementModal.classList.add('hidden'));
-                document.getElementById('cancel-action-btn').addEventListener('click', () => genericConfirmModal.classList.add('hidden'));
+
                 confirmActionBtn.addEventListener('click', () => {
                     if (confirmCallback) confirmCallback();
                     genericConfirmModal.classList.add('hidden');
@@ -852,6 +851,16 @@
                 editMovementForm.addEventListener('submit', handleUpdateMovement);
                 document.getElementById('add-artigo-form').addEventListener('submit', handleAddArtigo);
                 document.getElementById('add-obra-form').addEventListener('submit', handleAddObra);
+                document.getElementById('save-settings-btn').addEventListener('click', async () => {
+                    const newName = document.getElementById('user-name-input').value.trim();
+                    if (newName && userId) {
+                        await setDoc(doc(db, usersPath, userId), { name: newName }, { merge: true });
+                        userName = newName;
+                        document.getElementById('user-name-display-dashboard').textContent = newName;
+                        showNotification("Nome guardado com sucesso!", "success");
+                    }
+                });
+
 
                 // --- Importação de Artigos ---
                 document.getElementById('add-artigo-btn').addEventListener('click', () => document.getElementById('add-artigo-modal').classList.remove('hidden'));
@@ -880,12 +889,21 @@
                 document.getElementById('confirm-import-obras-btn').addEventListener('click', () => importItems(parsedObras, obrasPath, 'numero'));
                 
                 // --- Ações nas Listas ---
-                lists.movimentos.addEventListener('click', (e) => {
-                    const button = e.target.closest('button');
-                    if (!button) return;
-                    const movementId = button.dataset.id;
+                const setupListActions = (listElement, editClass, deleteClass, editHandler, deleteHandler) => {
+                    listElement.addEventListener('click', (e) => {
+                        const button = e.target.closest('button');
+                        if (!button) return;
+                        const id = button.dataset.id;
+                        if (button.classList.contains(editClass)) {
+                            editHandler(id);
+                        } else if (button.classList.contains(deleteClass)) {
+                            deleteHandler(id);
+                        }
+                    });
+                };
 
-                    if (button.classList.contains('edit-movement-btn')) {
+                setupListActions(lists.movimentos, 'edit-movement-btn', 'delete-movement-btn', 
+                    (movementId) => { // Edit Handler
                         const mov = allMovimentos.find(m => m.id === movementId);
                         const artigo = allArtigos.find(a => a.id === mov.artigo_id);
                         const obra = allObras.find(o => o.id === mov.obra_id);
@@ -896,24 +914,46 @@
                         editSearchObraSelect.value = obra ? `${obra.numero} - ${obra.nome}` : '';
                         editSelectedObraIdInput.value = obra?.id || '';
                         editMovementModal.classList.remove('hidden');
-                    } else if (button.classList.contains('delete-movement-btn')) {
+                    },
+                    (movementId) => { // Delete Handler
                         showConfirmModal('Eliminar Movimento', 'Tem a certeza que deseja eliminar este movimento?', () => handleDeleteMovement(movementId));
                     }
-                });
+                );
 
-                lists.artigos.addEventListener('click', (e) => {
-                    const button = e.target.closest('.delete-artigo-btn');
-                    if(button) {
-                        showConfirmModal('Eliminar Artigo', 'Tem a certeza que deseja eliminar este artigo?', () => handleDeleteArtigo(button.dataset.id));
-                    }
-                });
+                setupListActions(lists.artigos, null, 'delete-artigo-btn', null, 
+                    (artigoId) => showConfirmModal('Eliminar Artigo', 'Tem a certeza que deseja eliminar este artigo?', () => handleDeleteArtigo(artigoId))
+                );
 
-                 lists.obras.addEventListener('click', (e) => {
-                    const button = e.target.closest('.delete-obra-btn');
-                    if(button) {
-                        showConfirmModal('Eliminar Obra', 'Tem a certeza que deseja eliminar esta obra?', () => handleDeleteObra(button.dataset.id));
-                    }
-                });
+                setupListActions(lists.obras, null, 'delete-obra-btn', null, 
+                    (obraId) => showConfirmModal('Eliminar Obra', 'Tem a certeza que deseja eliminar esta obra?', () => handleDeleteObra(obraId))
+                );
+
+                // --- Pesquisa de Obras nos Modais ---
+                const setupObraSearch = (searchInput, dropdown, selectedIdInput) => {
+                    searchInput.addEventListener('input', (e) => {
+                        const searchTerm = e.target.value.toLowerCase();
+                        if (!searchTerm) { dropdown.classList.add('hidden'); return; }
+                        const filteredObras = allObras.filter(obra => obra.nome.toLowerCase().includes(searchTerm) || (obra.numero && obra.numero.toLowerCase().includes(searchTerm)) );
+                        dropdown.innerHTML = '';
+                        if (filteredObras.length > 0) {
+                            filteredObras.forEach(obra => {
+                                const item = document.createElement('div');
+                                item.className = 'p-2 hover:bg-indigo-100 cursor-pointer';
+                                item.textContent = `${obra.numero} - ${obra.nome}`;
+                                item.addEventListener('click', () => {
+                                    searchInput.value = item.textContent;
+                                    selectedIdInput.value = obra.id;
+                                    dropdown.classList.add('hidden');
+                                });
+                                dropdown.appendChild(item);
+                            });
+                            dropdown.classList.remove('hidden');
+                        } else { dropdown.classList.add('hidden'); }
+                    });
+                };
+
+                setupObraSearch(searchObraSelect, searchObraDropdown, selectedObraIdInput);
+                setupObraSearch(editSearchObraSelect, editSearchObraDropdown, editSelectedObraIdInput);
                 
                 // --- Listeners de Filtros e Ordenação ---
                 searchArtigosInput.addEventListener('input', filterAndRenderArtigos);
@@ -937,9 +977,9 @@
                         loadingScreen.classList.add('hidden');
                         dashboardView.classList.remove('hidden');
 
-                        onSnapshot(query(collection(db, artigosPath)), snap => { allArtigos = snap.docs.map(d => ({id:d.id, ...d.data()})); filterAndRenderArtigos(); if(tabPanes.movimentos.offsetParent !== null) renderMovimentos(); });
-                        onSnapshot(query(collection(db, obrasPath)), snap => { allObras = snap.docs.map(d => ({id:d.id, ...d.data()})); filterAndRenderObras(); if(tabPanes.movimentos.offsetParent !== null) renderMovimentos(); });
-                        onSnapshot(query(collection(db, movimentosPath), orderBy('data_movimento', 'desc')), snap => { allMovimentos = snap.docs.map(d => ({id:d.id, ...d.data()})); if(tabPanes.movimentos.offsetParent !== null) renderMovimentos(); });
+                        onSnapshot(query(collection(db, artigosPath)), snap => { allArtigos = snap.docs.map(d => ({id:d.id, ...d.data()})); filterAndRenderArtigos(); renderMovimentos(); });
+                        onSnapshot(query(collection(db, obrasPath)), snap => { allObras = snap.docs.map(d => ({id:d.id, ...d.data()})); filterAndRenderObras(); renderMovimentos(); });
+                        onSnapshot(query(collection(db, movimentosPath), orderBy('data_movimento', 'desc')), snap => { allMovimentos = snap.docs.map(d => ({id:d.id, ...d.data()})); renderMovimentos(); });
                     }
                 });
                 await signInAnonymously(auth);
