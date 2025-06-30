@@ -81,7 +81,7 @@
             <p id="loading-message" class="mt-4 text-slate-500">A iniciar e a autenticar...</p>
         </div>
         
-        <!-- NOVO ROSTO DA APP (DASHBOARD) -->
+        <!-- DASHBOARD PRINCIPAL -->
         <div id="dashboard-view" class="p-4 md:p-6 hidden">
              <div class="max-w-md mx-auto flex flex-col gap-4">
                  <div class="flex justify-between items-center mb-4">
@@ -134,7 +134,7 @@
              </div>
         </div>
 
-        <!-- VISTAS DE DETALHE (TABS ANTIGAS) -->
+        <!-- VISTAS DE DETALHE -->
         <main id="detail-view" class="hidden p-4 md:p-6">
             <header class="mb-6 pb-4 border-b border-slate-200 flex items-center justify-between">
                 <div class="flex items-center">
@@ -147,7 +147,6 @@
                          <h1 id="detail-title" class="text-3xl font-bold text-slate-900"></h1>
                     </div>
                 </div>
-                <!-- NOVO: Botão de histórico global, visível apenas na vista de movimentos -->
                 <div id="movimentos-header-actions" class="hidden">
                     <button id="global-history-btn" class="p-2 rounded-full hover:bg-slate-200 transition text-slate-600" title="Ver Histórico Global de Movimentos">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6-2.292m0 0v14.25" /></svg>
@@ -165,7 +164,6 @@
                     </div>
                     <div id="movimentos-list" class="space-y-3"></div>
                 </div>
-                <!-- NOVO: Vista para o Histórico Global -->
                 <div id="movimentos-history-content" class="tab-pane hidden fade-in">
                     <div id="movimentos-history-list" class="space-y-3"></div>
                 </div>
@@ -232,7 +230,8 @@
     <!-- MODAIS -->
     <div id="qr-scanner-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop hidden">
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-md p-6 relative fade-in">
-            <h3 class="text-xl font-semibold mb-4 text-center">Aponte a câmara para o QR Code</h3><div id="qr-reader"></div>
+            <h3 class="text-xl font-semibold mb-4 text-center">Aponte a câmara para o QR Code</h3>
+            <div id="qr-reader"></div>
             <p id="qr-scan-feedback" class="text-center text-sm text-red-500 mt-3 h-5"></p>
             <button id="close-scanner-btn" class="absolute top-3 right-3 text-gray-400 hover:text-gray-600"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg></button>
         </div>
@@ -285,14 +284,14 @@
             </form>
         </div>
     </div>
-    <!-- NOVO: Modal de confirmação de eliminação -->
-    <div id="delete-confirm-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop hidden">
+    <!-- NOVO: Modal de confirmação genérico -->
+    <div id="generic-confirm-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop hidden">
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-sm p-6 fade-in">
-            <h3 class="text-xl font-semibold mb-2">Confirmar Eliminação</h3>
-            <p class="text-slate-600 mb-6">Tem a certeza de que deseja eliminar este movimento? Esta ação não pode ser desfeita.</p>
+            <h3 id="confirm-title" class="text-xl font-semibold mb-2">Confirmar Ação</h3>
+            <p id="confirm-message" class="text-slate-600 mb-6">Tem a certeza?</p>
             <div class="flex items-center justify-end space-x-3">
-                <button type="button" id="cancel-delete-btn" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold py-2 px-4 rounded-lg">Cancelar</button>
-                <button type="button" id="confirm-delete-btn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-5 rounded-lg">Eliminar</button>
+                <button type="button" id="cancel-action-btn" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold py-2 px-4 rounded-lg">Cancelar</button>
+                <button type="button" id="confirm-action-btn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-5 rounded-lg">Confirmar</button>
             </div>
         </div>
     </div>
@@ -396,17 +395,6 @@
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, doc, addDoc, getDoc, getDocs, onSnapshot, query, where, writeBatch, serverTimestamp, setDoc, updateDoc, deleteDoc, orderBy } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         
-        // --- Service Worker Registration ---
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/service-worker.js').then(registration => {
-                    console.log('ServiceWorker registado com sucesso: ', registration.scope);
-                }, err => {
-                    console.log('Registo do ServiceWorker falhou: ', err);
-                });
-            });
-        }
-
         // --- FUNÇÕES GLOBAIS --- //
         const showNotification = (message, type = 'success') => {
             const notificationContent = document.getElementById('notification-content');
@@ -425,8 +413,6 @@
         
         // --- INICIALIZAÇÃO DA APP ---
         document.addEventListener('DOMContentLoaded', async () => {
-            const { jsPDF } = window.jspdf;
-
             const firebaseConfig = typeof __firebase_config !== 'undefined' 
                 ? JSON.parse(__firebase_config) 
                 : {
@@ -444,90 +430,98 @@
             let allArtigos = [], allObras = [], allMovimentos = [];
             let parsedArtigos = [], parsedObras = [];
             let sortArtigosBy = 'nome', sortObrasBy = 'nome';
-            let movementToDeleteId = null;
             
             const artigosPath = `artifacts/${appId}/public/data/artigos`;
             const obrasPath = `artifacts/${appId}/public/data/obras`;
             const movimentosPath = `artifacts/${appId}/public/data/movimentos`;
-            const movimentosHistoryPath = `artifacts/${appId}/public/data/movimentos_history`; // NOVO: Path para o histórico global
+            const movimentosHistoryPath = `artifacts/${appId}/public/data/movimentos_history`;
             const usersPath = `artifacts/${appId}/users`;
 
-            // DOM Elements
+            // --- Seletores de DOM ---
             const loadingScreen = document.getElementById('loading-screen');
             const dashboardView = document.getElementById('dashboard-view');
             const detailView = document.getElementById('detail-view');
             const detailTitle = document.getElementById('detail-title');
             const movimentosHeaderActions = document.getElementById('movimentos-header-actions');
-            const globalHistoryBtn = document.getElementById('global-history-btn');
-
-            const dashboardScanBtn = document.getElementById('dashboard-scan-btn');
-            const dashboardMovimentosBtn = document.getElementById('dashboard-movimentos-btn');
-            const dashboardArtigosBtn = document.getElementById('dashboard-artigos-btn');
-            const dashboardObrasBtn = document.getElementById('dashboard-obras-btn');
-            const dashboardDefinicoesBtn = document.getElementById('dashboard-definicoes-btn');
             const backToDashboardBtn = document.getElementById('back-to-dashboard-btn');
             
-            const qrScannerModal = document.getElementById('qr-scanner-modal');
-            const registerUsageModal = document.getElementById('register-usage-modal');
-            const registerUsageForm = document.getElementById('register-usage-form');
-            const cancelUsageBtn = document.getElementById('cancel-usage-btn');
-            const addArtigoModal = document.getElementById('add-artigo-modal');
-            const addArtigoForm = document.getElementById('add-artigo-form');
-            const cancelAddArtigoBtn = document.getElementById('cancel-add-artigo-btn');
-            const addObraModal = document.getElementById('add-obra-modal');
-            const addObraForm = document.getElementById('add-obra-form');
-            const cancelAddObraBtn = document.getElementById('cancel-add-obra-btn');
-            
-            const editMovementModal = document.getElementById('edit-movement-modal');
-            const editMovementForm = document.getElementById('edit-movement-form');
-            const cancelEditMovementBtn = document.getElementById('cancel-edit-movement-btn');
-            const deleteConfirmModal = document.getElementById('delete-confirm-modal');
-            const cancelDeleteBtn = document.getElementById('cancel-delete-btn');
-            const confirmDeleteBtn = document.getElementById('confirm-delete-btn');
-
             const tabPanes = { 
                 movimentos: document.getElementById('movimentos-content'), 
                 artigos: document.getElementById('artigos-content'), 
                 obras: document.getElementById('obras-content'), 
                 definicoes: document.getElementById('definicoes-content'),
-                history: document.getElementById('movimentos-history-content') // NOVO: Painel para o histórico
+                history: document.getElementById('movimentos-history-content')
             };
             const lists = { 
                 movimentos: document.getElementById('movimentos-list'), 
                 artigos: document.getElementById('artigos-list'), 
                 obras: document.getElementById('obras-list'),
-                history: document.getElementById('movimentos-history-list') // NOVO: Lista para o histórico
+                history: document.getElementById('movimentos-history-list')
             };
             
             const searchArtigosInput = document.getElementById('search-artigos-input');
+            const sortArtigosNomeBtn = document.getElementById('sort-artigos-nome-btn');
+            const sortArtigosRefBtn = document.getElementById('sort-artigos-ref-btn');
             const searchObrasInput = document.getElementById('search-obras-input');
+            const sortObrasNomeBtn = document.getElementById('sort-obras-nome-btn');
+            const sortObrasNumeroBtn = document.getElementById('sort-obras-numero-btn');
             const searchObraSelect = document.getElementById('search-obra-select');
             const searchObraDropdown = document.getElementById('search-obra-dropdown');
             const selectedObraIdInput = document.getElementById('selected-obra-id');
             const editSearchObraSelect = document.getElementById('edit-search-obra-select');
             const editSearchObraDropdown = document.getElementById('edit-search-obra-dropdown');
             const editSelectedObraIdInput = document.getElementById('edit-selected-obra-id');
+            
+            const registerUsageModal = document.getElementById('register-usage-modal');
+            const registerUsageForm = document.getElementById('register-usage-form');
+            const editMovementModal = document.getElementById('edit-movement-modal');
+            const editMovementForm = document.getElementById('edit-movement-form');
+            const genericConfirmModal = document.getElementById('generic-confirm-modal');
+            const confirmActionBtn = document.getElementById('confirm-action-btn');
 
             let currentScannedArticle = null;
+            let confirmCallback = null;
 
+            // --- Funções de Navegação e UI ---
             const showDetailView = (viewName, title) => {
                 dashboardView.classList.add('hidden');
                 detailView.classList.remove('hidden');
                 detailTitle.textContent = title;
                 Object.values(tabPanes).forEach(pane => pane.classList.add('hidden'));
                 tabPanes[viewName].classList.remove('hidden');
-
-                // Mostrar/esconder o botão de histórico global
-                if (viewName === 'movimentos' || viewName === 'history') {
-                    movimentosHeaderActions.classList.remove('hidden');
-                } else {
-                    movimentosHeaderActions.classList.add('hidden');
-                }
+                movimentosHeaderActions.classList.toggle('hidden', viewName !== 'movimentos' && viewName !== 'history');
             };
 
             const showDashboard = () => {
                 detailView.classList.add('hidden');
                 dashboardView.classList.remove('hidden');
+            };
+
+            const showConfirmModal = (title, message, onConfirm) => {
+                document.getElementById('confirm-title').textContent = title;
+                document.getElementById('confirm-message').textContent = message;
+                confirmCallback = onConfirm;
+                genericConfirmModal.classList.remove('hidden');
+            };
+            
+            // --- Funções de Renderização e Filtragem ---
+            const renderArtigos = (artigos) => {
+                lists.artigos.innerHTML = '';
+                if (artigos.length === 0) { lists.artigos.innerHTML = `<p class="text-slate-500 text-center py-5">Nenhum artigo encontrado.</p>`; return; }
+                artigos.forEach(artigo => {
+                    const el = document.createElement('div');
+                    el.className = 'bg-white p-4 rounded-lg shadow-sm border border-slate-200 flex justify-between items-center';
+                    el.innerHTML = `
+                        <div>
+                           <p class="font-semibold text-slate-800">${artigo.nome}</p>
+                           <p class="text-sm text-slate-500 font-mono">${artigo.referencia}</p>
+                        </div>
+                        <button data-id="${artigo.id}" class="delete-artigo-btn p-1 text-slate-400 hover:text-red-600 transition-colors" title="Eliminar Artigo">
+                           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 pointer-events-none" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8z" clip-rule="evenodd" /></svg>
+                        </button>
+                    `;
+                    lists.artigos.appendChild(el);
+                });
             };
             
             const filterAndRenderArtigos = () => {
@@ -540,32 +534,36 @@
                 filtered.sort(sortFn);
                 renderArtigos(filtered);
             };
-            
-            const renderArtigos = (artigos) => {
-                lists.artigos.innerHTML = '';
-                if (artigos.length === 0) { lists.artigos.innerHTML = `<p class="text-slate-500 text-center py-5">Nenhum artigo encontrado.</p>`; return; }
-                artigos.forEach(artigo => {
-                    const el = document.createElement('div');
-                    el.className = 'bg-white p-4 rounded-lg shadow-sm border border-slate-200';
-                    el.innerHTML = `<p class="font-semibold text-slate-800">${artigo.nome}</p><p class="text-sm text-slate-500 font-mono">${artigo.referencia}</p>`;
-                    lists.artigos.appendChild(el);
-                });
-            };
 
             const renderObras = (obras) => {
                 lists.obras.innerHTML = '';
                 if (obras.length === 0) { lists.obras.innerHTML = `<p class="text-slate-500 text-center py-5">Nenhuma obra encontrada.</p>`; return; }
                 obras.forEach(obra => {
                     const el = document.createElement('div');
-                    el.className = 'bg-white p-4 rounded-lg shadow-sm border border-slate-200 flex justify-between items-start';
+                    el.className = 'bg-white p-4 rounded-lg shadow-sm border border-slate-200 flex justify-between items-center';
                     el.innerHTML = `
-                        <div>
-                            <p class="font-semibold text-slate-800">${obra.nome}</p>
-                            <p class="text-sm text-slate-500">Cliente: ${obra.cliente || 'N/A'}</p>
+                        <div class="flex-grow">
+                           <p class="font-semibold text-slate-800">${obra.nome}</p>
+                           <p class="text-sm text-slate-500">Cliente: ${obra.cliente || 'N/A'}</p>
+                           <p class="text-sm font-mono text-slate-400">${obra.numero || ''}</p>
                         </div>
-                        <p class="text-sm font-mono text-slate-400">${obra.numero || ''}</p>`;
+                        <button data-id="${obra.id}" class="delete-obra-btn p-1 text-slate-400 hover:text-red-600 transition-colors" title="Eliminar Obra">
+                           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 pointer-events-none" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8z" clip-rule="evenodd" /></svg>
+                        </button>
+                    `;
                     lists.obras.appendChild(el);
                 });
+            };
+
+            const filterAndRenderObras = () => {
+                const searchTerm = searchObrasInput.value.toLowerCase();
+                let filtered = allObras.filter(obra => obra.nome.toLowerCase().includes(searchTerm) || (obra.numero && obra.numero.toLowerCase().includes(searchTerm)) || (obra.cliente && obra.cliente.toLowerCase().includes(searchTerm)));
+                
+                const sortFn = sortObrasBy === 'nome' 
+                    ? (a, b) => a.nome.localeCompare(b.nome)
+                    : (a, b) => new Intl.Collator('pt-PT', { numeric: true }).compare(a.numero, b.numero);
+                filtered.sort(sortFn);
+                renderObras(filtered);
             };
             
             const renderMovimentos = () => {
@@ -590,10 +588,10 @@
                                 <p class="text-xs truncate">por: <span class="font-semibold">${mov.userName || 'Anónimo'}</span></p>
                                 <div class="mt-2 flex justify-end space-x-2">
                                     <button data-id="${mov.id}" class="edit-movement-btn p-1 text-slate-400 hover:text-indigo-600 transition-colors" title="Editar">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" /></svg>
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 pointer-events-none" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" /></svg>
                                     </button>
                                     <button data-id="${mov.id}" class="delete-movement-btn p-1 text-slate-400 hover:text-red-600 transition-colors" title="Eliminar">
-                                       <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8z" clip-rule="evenodd" /></svg>
+                                       <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 pointer-events-none" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8z" clip-rule="evenodd" /></svg>
                                     </button>
                                 </div>
                             </div>
@@ -602,167 +600,8 @@
                 });
             };
 
-            const onScanSuccess = (decodedText, decodedResult) => {
-                html5QrCode.stop().then(() => { 
-                    qrScannerModal.classList.add('hidden');
-                    processScannedReference(decodedText); 
-                }).catch(err => { 
-                    console.error("Falha ao parar o leitor de QR code.", err);
-                    qrScannerModal.classList.add('hidden');
-                });
-            };
-            
-            const processScannedReference = async (ref) => {
-                try {
-                    const q = query(collection(db, artigosPath), where("referencia", "==", ref));
-                    const querySnapshot = await getDocs(q);
-                    if (querySnapshot.empty) { showNotification(`Artigo com referência "${ref}" não encontrado.`, 'error'); return; }
-                    const docSnap = querySnapshot.docs[0];
-                    currentScannedArticle = { id: docSnap.id, ...docSnap.data() };
-                    document.getElementById('usage-artigo-nome').textContent = currentScannedArticle.nome;
-                    document.getElementById('usage-artigo-ref').textContent = currentScannedArticle.referencia;
-                    registerUsageForm.reset();
-                    registerUsageModal.classList.remove('hidden');
-                } catch (error) { console.error("Erro ao procurar artigo: ", error); showNotification("Ocorreu um erro ao procurar o artigo.", 'error'); }
-            };
-
-            const handleRegisterUsage = async (e) => {
-                e.preventDefault();
-                const quantidade = parseInt(document.getElementById('usage-quantidade').value, 10);
-                const obraId = selectedObraIdInput.value;
-                const errorMsgEl = document.getElementById('usage-error-msg');
-                
-                if (isNaN(quantidade) || quantidade <= 0) { errorMsgEl.textContent = 'Quantidade inválida.'; return; }
-                if (!obraId) { errorMsgEl.textContent = 'Por favor, selecione uma obra de destino.'; return; }
-                
-                try {
-                    const newMovementData = {
-                        artigo_id: currentScannedArticle.id,
-                        obra_id: obraId,
-                        quantidade_gasta: quantidade,
-                        userId: userId,
-                        userName: userName,
-                        data_movimento: serverTimestamp()
-                    };
-                    const newDocRef = await addDoc(collection(db, movimentosPath), newMovementData);
-                    
-                    await addDoc(collection(db, movimentosHistoryPath), {
-                        action: 'created',
-                        movementId: newDocRef.id,
-                        data: newMovementData,
-                        userName: userName,
-                        userId: userId,
-                        timestamp: serverTimestamp()
-                    });
-
-                    registerUsageModal.classList.add('hidden');
-                    showNotification('Gasto registado com sucesso!', 'success');
-                } catch(error) { console.error("Erro ao registar gasto: ", error); showNotification("Ocorreu um erro ao registar o movimento.", 'error'); }
-            };
-
-            const handleUpdateMovement = async (e) => {
-                e.preventDefault();
-                const movementId = document.getElementById('edit-movement-id').value;
-                const newQuantidade = parseInt(document.getElementById('edit-movement-quantidade').value, 10);
-                const newObraId = document.getElementById('edit-selected-obra-id').value;
-                
-                if (isNaN(newQuantidade) || newQuantidade <= 0) { return; }
-                if (!newObraId) { return; }
-
-                const movementDocRef = doc(db, movimentosPath, movementId);
-                try {
-                    const docSnap = await getDoc(movementDocRef);
-                    if (!docSnap.exists()) throw new Error("Movimento não encontrado!");
-                    
-                    const oldData = docSnap.data();
-                    const newData = { quantidade_gasta: newQuantidade, obra_id: newObraId };
-                    
-                    await updateDoc(movementDocRef, newData);
-                    
-                    await addDoc(collection(db, movimentosHistoryPath), {
-                        action: 'edited',
-                        movementId: movementId,
-                        oldData: { quantidade_gasta: oldData.quantidade_gasta, obra_id: oldData.obra_id },
-                        newData: newData,
-                        userName: userName,
-                        userId: userId,
-                        timestamp: serverTimestamp()
-                    });
-
-                    editMovementModal.classList.add('hidden');
-                    showNotification('Movimento atualizado com sucesso!', 'success');
-                } catch (error) {
-                    console.error("Erro ao atualizar movimento: ", error);
-                    showNotification("Ocorreu um erro ao atualizar.", 'error');
-                }
-            };
-            
-            // NOVO: Função para eliminar um movimento
-            const handleDeleteMovement = async () => {
-                if (!movementToDeleteId) return;
-                const movementDocRef = doc(db, movimentosPath, movementToDeleteId);
-                try {
-                    const docSnap = await getDoc(movementDocRef);
-                    if (!docSnap.exists()) throw new Error("Movimento não encontrado!");
-                    
-                    const deletedData = docSnap.data();
-                    
-                    await addDoc(collection(db, movimentosHistoryPath), {
-                        action: 'deleted',
-                        movementId: movementToDeleteId,
-                        data: deletedData, // Guardar os dados do movimento eliminado
-                        userName: userName,
-                        userId: userId,
-                        timestamp: serverTimestamp()
-                    });
-
-                    await deleteDoc(movementDocRef);
-
-                    deleteConfirmModal.classList.add('hidden');
-                    showNotification('Movimento eliminado com sucesso!', 'success');
-                } catch(error) {
-                    console.error("Erro ao eliminar movimento: ", error);
-                    showNotification("Ocorreu um erro ao eliminar.", "error");
-                } finally {
-                    movementToDeleteId = null;
-                }
-            };
-
-            const handleAddArtigo = async (e) => {
-                e.preventDefault();
-                const ref = document.getElementById('artigo-ref').value.trim();
-                const nome = document.getElementById('artigo-nome').value.trim();
-                if (!ref || !nome) return showNotification('Preencha todos os campos.', 'error');
-                try {
-                    const q = query(collection(db, artigosPath), where("referencia", "==", ref));
-                    const querySnapshot = await getDocs(q);
-                    if (!querySnapshot.empty) return showNotification(`A referência "${ref}" já existe.`, 'error');
-                    await addDoc(collection(db, artigosPath), { referencia: ref, nome: nome, data_criacao: serverTimestamp() });
-                    addArtigoModal.classList.add('hidden');
-                    showNotification('Artigo adicionado com sucesso!', 'success');
-                } catch (error) { console.error("Erro ao adicionar artigo: ", error); showNotification("Ocorreu um erro ao adicionar o artigo.", 'error'); }
-            };
-
-            const handleAddObra = async (e) => {
-                e.preventDefault();
-                const numero = document.getElementById('obra-numero').value.trim();
-                const nome = document.getElementById('obra-nome').value.trim();
-                const cliente = document.getElementById('obra-cliente').value.trim();
-                if (!numero || !nome || !cliente) return showNotification('Por favor, preencha todos os campos.', 'error');
-                try {
-                     const q = query(collection(db, obrasPath), where("numero", "==", numero));
-                    const querySnapshot = await getDocs(q);
-                    if (!querySnapshot.empty) return showNotification(`O número de obra "${numero}" já existe.`, 'error');
-                     await addDoc(collection(db, obrasPath), { numero: numero, nome: nome, cliente: cliente, data_criacao: serverTimestamp() });
-                    addObraModal.classList.add('hidden');
-                    showNotification('Obra adicionada com sucesso!', 'success');
-                } catch (error) { console.error("Erro ao adicionar obra: ", error); showNotification("Ocorreu um erro ao adicionar a obra.", 'error'); }
-            };
-
-            // NOVO: Função para renderizar o histórico global de movimentos
             const renderGlobalHistory = async () => {
                 lists.history.innerHTML = '<div class="spinner mx-auto"></div>';
-                
                 const q = query(collection(db, movimentosHistoryPath), orderBy('timestamp', 'desc'));
                 try {
                     const snapshot = await getDocs(q);
@@ -775,169 +614,325 @@
                         const historyData = doc.data();
                         const el = document.createElement('div');
                         el.className = 'bg-white p-4 rounded-lg shadow-sm border border-slate-200';
+                        const artigoInfo = historyData.data?.artigo_nome || 'Artigo Desconhecido';
                         
-                        const artigo = allArtigos.find(a => a.id === (historyData.data?.artigo_id || historyData.newData?.artigo_id || historyData.oldData?.artigo_id));
-                        
-                        let content = `<div class="flex justify-between items-center text-sm mb-2">
-                                        <span class="font-semibold text-slate-800">${historyData.userName || 'Anónimo'}</span>
-                                        <span class="text-slate-500">${formatDate(historyData.timestamp)}</span>
-                                     </div>`;
-
+                        let content = `<div class="flex justify-between items-center text-sm mb-2"><span class="font-semibold text-slate-800">${historyData.userName || 'Anónimo'}</span><span class="text-slate-500">${formatDate(historyData.timestamp)}</span></div>`;
                         let details = '';
                         switch(historyData.action) {
                             case 'created':
-                                details = `<span class="font-semibold text-green-600">CRIOU:</span> ${historyData.data.quantidade_gasta}x <strong>${artigo?.nome || 'Artigo Desconhecido'}</strong>`;
+                                details = `<span class="font-semibold text-green-600">CRIOU:</span> ${historyData.data.quantidade_gasta}x <strong>${artigoInfo}</strong>`;
                                 break;
                             case 'edited':
                                 const oldObra = allObras.find(o => o.id === historyData.oldData.obra_id) || {nome: 'N/A'};
                                 const newObra = allObras.find(o => o.id === historyData.newData.obra_id) || {nome: 'N/A'};
                                 let changes = [];
-                                if (historyData.oldData.quantidade_gasta !== historyData.newData.quantidade_gasta) {
-                                    changes.push(`Qtd: ${historyData.oldData.quantidade_gasta} ➞ ${historyData.newData.quantidade_gasta}`);
-                                }
-                                if (historyData.oldData.obra_id !== historyData.newData.obra_id) {
-                                    changes.push(`Obra: "${oldObra.nome}" ➞ "${newObra.nome}"`);
-                                }
-                                details = `<span class="font-semibold text-blue-600">EDITOU:</span> ${changes.join(', ')} no gasto de <strong>${artigo?.nome || 'Artigo Desconhecido'}</strong>`;
+                                if (historyData.oldData.quantidade_gasta !== historyData.newData.quantidade_gasta) changes.push(`Qtd: ${historyData.oldData.quantidade_gasta} ➞ ${historyData.newData.quantidade_gasta}`);
+                                if (historyData.oldData.obra_id !== historyData.newData.obra_id) changes.push(`Obra: "${oldObra.nome}" ➞ "${newObra.nome}"`);
+                                details = `<span class="font-semibold text-blue-600">EDITOU:</span> ${changes.join(', ')} no gasto de <strong>${artigoInfo}</strong>`;
                                 break;
                             case 'deleted':
-                                details = `<span class="font-semibold text-red-600">ELIMINOU:</span> Gasto de ${historyData.data.quantidade_gasta}x <strong>${artigo?.nome || 'Artigo Desconhecido'}</strong>`;
+                                details = `<span class="font-semibold text-red-600">ELIMINOU:</span> Gasto de ${historyData.data.quantidade_gasta}x <strong>${artigoInfo}</strong>`;
                                 break;
                         }
-                        
                         el.innerHTML = content + `<p class="text-sm">${details}</p>`;
                         lists.history.appendChild(el);
                     });
-
                 } catch(error) {
                     console.error("Erro ao carregar histórico global:", error);
                     lists.history.innerHTML = '<p class="text-red-500 text-center py-5">Erro ao carregar o histórico.</p>';
                 }
             };
 
+            // --- Funções de Lógica de Negócio (Firestore) ---
+            const startScanner = async () => {
+                const qrScannerModal = document.getElementById('qr-scanner-modal');
+                const qrScanFeedback = document.getElementById('qr-scan-feedback');
+                qrScanFeedback.textContent = '';
+                qrScannerModal.classList.remove('hidden');
+
+                try {
+                    const devices = await Html5Qrcode.getCameras();
+                    if (devices && devices.length) {
+                        const cameraId = devices.find(d => d.label.toLowerCase().includes('back') || d.label.toLowerCase().includes('trás'))?.id || devices[0].id;
+                        html5QrCode.start(
+                            cameraId, 
+                            { fps: 10, qrbox: {width: 250, height: 250} },
+                            (decodedText, decodedResult) => {
+                                html5QrCode.stop();
+                                qrScannerModal.classList.add('hidden');
+                                processScannedReference(decodedText);
+                            },
+                            (errorMessage) => { /* ignora erros de "não encontrado" */ }
+                        ).catch(err => {
+                             qrScanFeedback.textContent = "Não foi possível iniciar a câmara.";
+                             console.error("Erro ao iniciar o leitor de QR code", err);
+                        });
+                    } else {
+                        qrScanFeedback.textContent = "Nenhuma câmara encontrada.";
+                    }
+                } catch (err) {
+                    qrScanFeedback.textContent = "Erro ao aceder às câmaras. Verifique as permissões.";
+                     console.error("Erro ao obter câmaras", err);
+                }
+            };
+
+            const processScannedReference = async (ref) => {
+                const q = query(collection(db, artigosPath), where("referencia", "==", ref));
+                const querySnapshot = await getDocs(q);
+                if (querySnapshot.empty) { showNotification(`Artigo com referência "${ref}" não encontrado.`, 'error'); return; }
+                currentScannedArticle = { id: querySnapshot.docs[0].id, ...querySnapshot.docs[0].data() };
+                document.getElementById('usage-artigo-nome').textContent = currentScannedArticle.nome;
+                document.getElementById('usage-artigo-ref').textContent = currentScannedArticle.referencia;
+                registerUsageForm.reset();
+                registerUsageModal.classList.remove('hidden');
+            };
+
+            const handleRegisterUsage = async (e) => {
+                e.preventDefault();
+                const quantidade = parseInt(document.getElementById('usage-quantidade').value, 10);
+                const obraId = selectedObraIdInput.value;
+                if (isNaN(quantidade) || quantidade <= 0 || !obraId) { showNotification('Dados inválidos. Verifique a quantidade e a obra.', 'error'); return; }
+                
+                const newMovementData = {
+                    artigo_id: currentScannedArticle.id,
+                    artigo_nome: currentScannedArticle.nome,
+                    obra_id: obraId,
+                    quantidade_gasta: quantidade,
+                    userId: userId,
+                    userName: userName,
+                    data_movimento: serverTimestamp()
+                };
+                const newDocRef = await addDoc(collection(db, movimentosPath), newMovementData);
+                await addDoc(collection(db, movimentosHistoryPath), { action: 'created', movementId: newDocRef.id, data: newMovementData, userName, userId, timestamp: serverTimestamp() });
+                
+                registerUsageModal.classList.add('hidden');
+                showNotification('Gasto registado com sucesso!', 'success');
+            };
+
+            const handleUpdateMovement = async (e) => {
+                e.preventDefault();
+                const movementId = document.getElementById('edit-movement-id').value;
+                const newQuantidade = parseInt(document.getElementById('edit-movement-quantidade').value, 10);
+                const newObraId = editSelectedObraIdInput.value;
+                if (isNaN(newQuantidade) || newQuantidade <= 0 || !newObraId) { showNotification('Dados inválidos.', 'error'); return; }
+                
+                const movementDocRef = doc(db, movimentosPath, movementId);
+                const docSnap = await getDoc(movementDocRef);
+                if (!docSnap.exists()) { showNotification('Erro: Movimento não encontrado.', 'error'); return; }
+                
+                const oldData = docSnap.data();
+                const newData = { quantidade_gasta: newQuantidade, obra_id: newObraId };
+                await updateDoc(movementDocRef, newData);
+                await addDoc(collection(db, movimentosHistoryPath), { action: 'edited', movementId, oldData: { quantidade_gasta: oldData.quantidade_gasta, obra_id: oldData.obra_id }, newData, userName, userId, timestamp: serverTimestamp() });
+                
+                editMovementModal.classList.add('hidden');
+                showNotification('Movimento atualizado!', 'success');
+            };
+            
+            const handleDeleteMovement = async (movementId) => {
+                const movementDocRef = doc(db, movimentosPath, movementId);
+                const docSnap = await getDoc(movementDocRef);
+                if (docSnap.exists()) {
+                    await addDoc(collection(db, movimentosHistoryPath), { action: 'deleted', movementId: movementId, data: docSnap.data(), userName, userId, timestamp: serverTimestamp() });
+                    await deleteDoc(movementDocRef);
+                    showNotification('Movimento eliminado!', 'success');
+                }
+            };
+
+            const handleDeleteArtigo = async (artigoId) => {
+                const q = query(collection(db, movimentosPath), where("artigo_id", "==", artigoId));
+                const snapshot = await getDocs(q);
+                if (!snapshot.empty) {
+                    showNotification('Este artigo não pode ser eliminado pois está associado a movimentos.', 'error');
+                    return;
+                }
+                await deleteDoc(doc(db, artigosPath, artigoId));
+                showNotification('Artigo eliminado com sucesso.', 'success');
+            };
+
+            const handleDeleteObra = async (obraId) => {
+                const q = query(collection(db, movimentosPath), where("obra_id", "==", obraId));
+                const snapshot = await getDocs(q);
+                if (!snapshot.empty) {
+                    showNotification('Esta obra não pode ser eliminada pois está associada a movimentos.', 'error');
+                    return;
+                }
+                await deleteDoc(doc(db, obrasPath, obraId));
+                showNotification('Obra eliminada com sucesso.', 'success');
+            };
+            
+            const handleAddArtigo = async (e) => {
+                e.preventDefault();
+                const ref = document.getElementById('artigo-ref').value.trim();
+                const nome = document.getElementById('artigo-nome').value.trim();
+                if (!ref || !nome) return showNotification('Preencha todos os campos.', 'error');
+                try {
+                    const q = query(collection(db, artigosPath), where("referencia", "==", ref));
+                    const querySnapshot = await getDocs(q);
+                    if (!querySnapshot.empty) return showNotification(`A referência "${ref}" já existe.`, 'error');
+                    await addDoc(collection(db, artigosPath), { referencia: ref, nome: nome, data_criacao: serverTimestamp() });
+                    document.getElementById('add-artigo-modal').classList.add('hidden');
+                    showNotification('Artigo adicionado com sucesso!', 'success');
+                } catch (error) { console.error("Erro ao adicionar artigo: ", error); showNotification("Ocorreu um erro ao adicionar o artigo.", 'error'); }
+            };
+
+            const handleAddObra = async (e) => {
+                e.preventDefault();
+                const numero = document.getElementById('obra-numero').value.trim();
+                const nome = document.getElementById('obra-nome').value.trim();
+                const cliente = document.getElementById('obra-cliente').value.trim();
+                if (!numero || !nome || !cliente) return showNotification('Por favor, preencha todos os campos.', 'error');
+                try {
+                    const q = query(collection(db, obrasPath), where("numero", "==", numero));
+                    const querySnapshot = await getDocs(q);
+                    if (!querySnapshot.empty) return showNotification(`O número de obra "${numero}" já existe.`, 'error');
+                    await addDoc(collection(db, obrasPath), { numero: numero, nome: nome, cliente: cliente, data_criacao: serverTimestamp() });
+                    document.getElementById('add-obra-modal').classList.add('hidden');
+                    showNotification('Obra adicionada com sucesso!', 'success');
+                } catch (error) { console.error("Erro ao adicionar obra: ", error); showNotification("Ocorreu um erro ao adicionar a obra.", 'error'); }
+            };
+
+            const importItems = async (parsedItems, collectionPath, uniqueKey) => {
+                const q = query(collection(db, collectionPath));
+                const querySnapshot = await getDocs(q);
+                const existingKeys = new Set(querySnapshot.docs.map(doc => doc.data()[uniqueKey]));
+                const batch = writeBatch(db);
+                let importedCount = 0;
+                parsedItems.forEach(item => {
+                    if (!existingKeys.has(item[uniqueKey])) {
+                        const newItemRef = doc(collection(db, collectionPath));
+                        batch.set(newItemRef, {...item, data_criacao: serverTimestamp()});
+                        importedCount++;
+                        existingKeys.add(item[uniqueKey]);
+                    }
+                });
+                if (importedCount > 0) await batch.commit();
+                showNotification(`${importedCount} itens importados. ${parsedItems.length - importedCount} ignorados (já existiam).`, 'success');
+            };
+
+            // --- Inicialização e Event Listeners ---
             try {
                 app = initializeApp(firebaseConfig);
                 db = getFirestore(app);
                 auth = getAuth(app);
                 html5QrCode = new Html5Qrcode("qr-reader");
 
-                // --- EVENT LISTENERS ---
-                dashboardMovimentosBtn.addEventListener('click', () => {
-                    tabPanes.history.classList.add('hidden');
-                    tabPanes.movimentos.classList.remove('hidden');
-                    showDetailView('movimentos', 'Movimentos');
-                });
-                dashboardArtigosBtn.addEventListener('click', () => showDetailView('artigos', 'Artigos'));
-                dashboardObrasBtn.addEventListener('click', () => showDetailView('obras', 'Obras'));
-                dashboardDefinicoesBtn.addEventListener('click', () => showDetailView('definicoes', 'Definições'));
+                // --- Navegação ---
+                document.getElementById('dashboard-scan-btn').addEventListener('click', startScanner);
+                document.getElementById('dashboard-movimentos-btn').addEventListener('click', () => showDetailView('movimentos', 'Movimentos'));
+                document.getElementById('dashboard-artigos-btn').addEventListener('click', () => showDetailView('artigos', 'Artigos'));
+                document.getElementById('dashboard-obras-btn').addEventListener('click', () => showDetailView('obras', 'Obras'));
+                document.getElementById('dashboard-definicoes-btn').addEventListener('click', () => showDetailView('definicoes', 'Definições'));
+                document.getElementById('global-history-btn').addEventListener('click', () => { renderGlobalHistory(); showDetailView('history', 'Histórico de Movimentos'); });
                 backToDashboardBtn.addEventListener('click', showDashboard);
 
-                // NOVO: Listener para o botão de histórico global
-                globalHistoryBtn.addEventListener('click', () => {
-                    renderGlobalHistory();
-                    showDetailView('history', 'Histórico de Movimentos');
+                // --- Modais ---
+                document.querySelectorAll('[id^="cancel-"], #close-scanner-btn').forEach(btn => btn.addEventListener('click', () => btn.closest('.modal-backdrop').classList.add('hidden')));
+                confirmActionBtn.addEventListener('click', () => {
+                    if (confirmCallback) confirmCallback();
+                    genericConfirmModal.classList.add('hidden');
                 });
-
-                cancelEditMovementBtn.addEventListener('click', () => editMovementModal.classList.add('hidden'));
-                cancelDeleteBtn.addEventListener('click', () => deleteConfirmModal.classList.add('hidden'));
-                confirmDeleteBtn.addEventListener('click', handleDeleteMovement);
                 
-                lists.movimentos.addEventListener('click', (e) => {
-                    const editBtn = e.target.closest('.edit-movement-btn');
-                    if (editBtn) {
-                        const mov = allMovimentos.find(m => m.id === editBtn.dataset.id);
-                        if (!mov) return;
-                        const artigo = allArtigos.find(a => a.id === mov.artigo_id);
-                        const obra = allObras.find(o => o.id === mov.obra_id);
-                        
-                        document.getElementById('edit-movement-id').value = mov.id;
-                        document.getElementById('edit-movement-artigo-nome').textContent = artigo ? artigo.nome : 'N/A';
-                        document.getElementById('edit-movement-artigo-ref').textContent = artigo ? artigo.referencia : '-';
-                        document.getElementById('edit-movement-quantidade').value = mov.quantidade_gasta;
-                        editSearchObraSelect.value = obra ? `${obra.numero} - ${obra.nome}` : '';
-                        editSelectedObraIdInput.value = obra ? obra.id : '';
-                        editMovementModal.classList.remove('hidden');
-                        return;
-                    }
-                    const deleteBtn = e.target.closest('.delete-movement-btn');
-                    if (deleteBtn) {
-                        movementToDeleteId = deleteBtn.dataset.id;
-                        deleteConfirmModal.classList.remove('hidden');
-                        return;
-                    }
-                });
-
-                const setupObraSearch = (searchInput, dropdown, selectedIdInput) => {
-                    searchInput.addEventListener('input', (e) => {
-                        const searchTerm = e.target.value.toLowerCase();
-                        if (!searchTerm) { dropdown.classList.add('hidden'); return; }
-                        const filteredObras = allObras.filter(obra => obra.nome.toLowerCase().includes(searchTerm) || (obra.numero && obra.numero.toLowerCase().includes(searchTerm)) );
-                        dropdown.innerHTML = '';
-                        if (filteredObras.length > 0) {
-                            filteredObras.forEach(obra => {
-                                const item = document.createElement('div');
-                                item.className = 'p-2 hover:bg-indigo-100 cursor-pointer';
-                                item.textContent = `${obra.numero} - ${obra.nome}`;
-                                item.dataset.id = obra.id;
-                                item.dataset.text = `${obra.numero} - ${obra.nome}`;
-                                item.addEventListener('click', () => {
-                                    searchInput.value = item.dataset.text;
-                                    selectedIdInput.value = item.dataset.id;
-                                    dropdown.classList.add('hidden');
-                                });
-                                dropdown.appendChild(item);
-                            });
-                            dropdown.classList.remove('hidden');
-                        } else { dropdown.classList.add('hidden'); }
-                    });
-                };
-                
-                setupObraSearch(searchObraSelect, searchObraDropdown, selectedObraIdInput);
-                setupObraSearch(editSearchObraSelect, editSearchObraDropdown, editSelectedObraIdInput);
-
+                // --- Forms ---
                 registerUsageForm.addEventListener('submit', handleRegisterUsage);
                 editMovementForm.addEventListener('submit', handleUpdateMovement);
+                document.getElementById('add-artigo-form').addEventListener('submit', handleAddArtigo);
+                document.getElementById('add-obra-form').addEventListener('submit', handleAddObra);
 
+                // --- Importação de Artigos ---
+                document.getElementById('add-artigo-btn').addEventListener('click', () => document.getElementById('add-artigo-modal').classList.remove('hidden'));
+                document.getElementById('import-artigos-text-btn').addEventListener('click', () => document.getElementById('import-artigos-text-modal').classList.remove('hidden'));
+                document.getElementById('process-artigos-text-btn').addEventListener('click', () => {
+                    const lines = document.getElementById('artigos-text-input-area').value.split('\n');
+                    parsedArtigos = lines.map(line => {
+                        const [referencia, nome] = line.split(';').map(s => s.trim());
+                        return (referencia && nome) ? { referencia, nome } : null;
+                    }).filter(Boolean);
+                    document.getElementById('confirm-import-artigos-btn').classList.remove('hidden');
+                });
+                document.getElementById('confirm-import-artigos-btn').addEventListener('click', () => importItems(parsedArtigos, artigosPath, 'referencia'));
+
+                // --- Importação de Obras ---
+                document.getElementById('add-obra-btn').addEventListener('click', () => document.getElementById('add-obra-modal').classList.remove('hidden'));
+                document.getElementById('import-obras-text-btn').addEventListener('click', () => document.getElementById('import-obras-text-modal').classList.remove('hidden'));
+                document.getElementById('process-obras-text-btn').addEventListener('click', () => {
+                     const lines = document.getElementById('obras-text-input-area').value.split('\n');
+                     parsedObras = lines.map(line => {
+                        const [numero, nome, cliente] = line.split(';').map(s => s.trim());
+                        return (numero && nome && cliente) ? { numero, nome, cliente } : null;
+                    }).filter(Boolean);
+                    document.getElementById('confirm-import-obras-btn').classList.remove('hidden');
+                });
+                document.getElementById('confirm-import-obras-btn').addEventListener('click', () => importItems(parsedObras, obrasPath, 'numero'));
+                
+                // --- Ações nas Listas ---
+                lists.movimentos.addEventListener('click', (e) => {
+                    const button = e.target.closest('button');
+                    if (!button) return;
+                    const movementId = button.dataset.id;
+
+                    if (button.classList.contains('edit-movement-btn')) {
+                        const mov = allMovimentos.find(m => m.id === movementId);
+                        const artigo = allArtigos.find(a => a.id === mov.artigo_id);
+                        const obra = allObras.find(o => o.id === mov.obra_id);
+                        document.getElementById('edit-movement-id').value = mov.id;
+                        document.getElementById('edit-movement-artigo-nome').textContent = artigo?.nome || 'N/A';
+                        document.getElementById('edit-movement-artigo-ref').textContent = artigo?.referencia || '-';
+                        document.getElementById('edit-movement-quantidade').value = mov.quantidade_gasta;
+                        editSearchObraSelect.value = obra ? `${obra.numero} - ${obra.nome}` : '';
+                        editSelectedObraIdInput.value = obra?.id || '';
+                        editMovementModal.classList.remove('hidden');
+                    } else if (button.classList.contains('delete-movement-btn')) {
+                        showConfirmModal('Eliminar Movimento', 'Tem a certeza que deseja eliminar este movimento?', () => handleDeleteMovement(movementId));
+                    }
+                });
+
+                lists.artigos.addEventListener('click', (e) => {
+                    const button = e.target.closest('.delete-artigo-btn');
+                    if(button) {
+                        showConfirmModal('Eliminar Artigo', 'Tem a certeza que deseja eliminar este artigo?', () => handleDeleteArtigo(button.dataset.id));
+                    }
+                });
+
+                 lists.obras.addEventListener('click', (e) => {
+                    const button = e.target.closest('.delete-obra-btn');
+                    if(button) {
+                        showConfirmModal('Eliminar Obra', 'Tem a certeza que deseja eliminar esta obra?', () => handleDeleteObra(button.dataset.id));
+                    }
+                });
+                
+                // --- Listeners de Filtros e Ordenação ---
+                searchArtigosInput.addEventListener('input', filterAndRenderArtigos);
+                sortArtigosNomeBtn.addEventListener('click', () => { sortArtigosBy = 'nome'; filterAndRenderArtigos(); });
+                sortArtigosRefBtn.addEventListener('click', () => { sortArtigosBy = 'ref'; filterAndRenderArtigos(); });
+                searchObrasInput.addEventListener('input', filterAndRenderObras);
+                sortObrasNomeBtn.addEventListener('click', () => { sortObrasBy = 'nome'; filterAndRenderObras(); });
+                sortObrasNumeroBtn.addEventListener('click', () => { sortObrasBy = 'numero'; filterAndRenderObras(); });
+
+                // --- Autenticação e Listeners do Firestore ---
                 onAuthStateChanged(auth, async (user) => {
                     if (user) {
                         userId = user.uid;
                         const userDocRef = doc(db, usersPath, userId);
                         try {
                             const userDocSnap = await getDoc(userDocRef);
-                            if (userDocSnap.exists() && userDocSnap.data().name) {
-                                userName = userDocSnap.data().name;
-                            }
+                            if (userDocSnap.exists() && userDocSnap.data().name) userName = userDocSnap.data().name;
                         } catch (error) { console.warn("Erro ao carregar perfil."); }
-
                         document.getElementById('user-name-display-dashboard').textContent = userName;
                         document.getElementById('user-name-input').value = userName;
                         loadingScreen.classList.add('hidden');
                         dashboardView.classList.remove('hidden');
 
-                        const artigosQuery = query(collection(db, artigosPath));
-                        onSnapshot(artigosQuery, snapshot => {
-                            allArtigos = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                            renderMovimentos();
-                        });
-
-                        const obrasQuery = query(collection(db, obrasPath));
-                        onSnapshot(obrasQuery, snapshot => {
-                            allObras = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                            renderMovimentos();
-                        });
-                        
-                        const movimentosQuery = query(collection(db, movimentosPath), orderBy('data_movimento', 'desc'));
-                        onSnapshot(movimentosQuery, snapshot => { 
-                            allMovimentos = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                            renderMovimentos();
-                        });
+                        onSnapshot(query(collection(db, artigosPath)), snap => { allArtigos = snap.docs.map(d => ({id:d.id, ...d.data()})); filterAndRenderArtigos(); renderMovimentos(); });
+                        onSnapshot(query(collection(db, obrasPath)), snap => { allObras = snap.docs.map(d => ({id:d.id, ...d.data()})); filterAndRenderObras(); renderMovimentos(); });
+                        onSnapshot(query(collection(db, movimentosPath), orderBy('data_movimento', 'desc')), snap => { allMovimentos = snap.docs.map(d => ({id:d.id, ...d.data()})); renderMovimentos(); });
                     }
                 });
                 await signInAnonymously(auth);
+
             } catch (error) { 
                 console.error("Erro fatal na inicialização: ", error); 
-                loadingMessage.textContent = 'Ocorreu um erro crítico.';
-                loadingMessage.classList.add('text-red-500');
+                document.getElementById('loading-message').textContent = 'Ocorreu um erro crítico.';
             }
         });
     </script>
