@@ -481,6 +481,7 @@
 
             let currentScannedArticle = null;
             let confirmCallback = null;
+            let scanTimeoutId = null;
 
             // --- Funções de Navegação e UI ---
             const showDetailView = (viewName, title) => {
@@ -644,36 +645,46 @@
             };
 
             // --- Funções de Lógica de Negócio (Firestore) ---
-            const startScanner = async () => {
+            const stopScanner = () => {
+                if (html5QrCode && html5QrCode.isScanning) {
+                    html5QrCode.stop().catch(err => {
+                        console.warn("Aviso ao parar o leitor de QR code.", err);
+                    });
+                }
+                if (scanTimeoutId) {
+                    clearTimeout(scanTimeoutId);
+                    scanTimeoutId = null;
+                }
+                document.getElementById('qr-scanner-modal').classList.add('hidden');
+            };
+
+            const startScanner = () => {
                 const qrScannerModal = document.getElementById('qr-scanner-modal');
                 const qrScanFeedback = document.getElementById('qr-scan-feedback');
                 qrScanFeedback.textContent = '';
                 qrScannerModal.classList.remove('hidden');
 
-                try {
-                    const devices = await Html5Qrcode.getCameras();
-                    if (devices && devices.length) {
-                        const cameraId = devices.find(d => d.label.toLowerCase().includes('back') || d.label.toLowerCase().includes('trás'))?.id || devices[0].id;
-                        html5QrCode.start(
-                            cameraId, 
-                            { fps: 10, qrbox: {width: 250, height: 250} },
-                            (decodedText, decodedResult) => {
-                                html5QrCode.stop();
-                                qrScannerModal.classList.add('hidden');
-                                processScannedReference(decodedText);
-                            },
-                            (errorMessage) => { /* ignora erros de "não encontrado" */ }
-                        ).catch(err => {
-                             qrScanFeedback.textContent = "Não foi possível iniciar a câmara.";
-                             console.error("Erro ao iniciar o leitor de QR code", err);
-                        });
-                    } else {
-                        qrScanFeedback.textContent = "Nenhuma câmara encontrada.";
+                const onScanSuccess = (decodedText, decodedResult) => {
+                    stopScanner();
+                    processScannedReference(decodedText);
+                };
+
+                html5QrCode.start(
+                    { facingMode: "environment" },
+                    { fps: 10, qrbox: { width: 250, height: 250 } },
+                    onScanSuccess,
+                    (errorMessage) => {}
+                ).catch((err) => {
+                    qrScanFeedback.textContent = "Não foi possível iniciar a câmara. Verifique as permissões.";
+                    console.error("Erro ao iniciar o leitor de QR code", err);
+                });
+
+                scanTimeoutId = setTimeout(() => {
+                    if (html5QrCode && html5QrCode.isScanning) {
+                         showNotification("Tempo esgotado. Tente novamente.", "error");
+                         stopScanner();
                     }
-                } catch (err) {
-                    qrScanFeedback.textContent = "Erro ao aceder às câmaras. Verifique as permissões.";
-                     console.error("Erro ao obter câmaras", err);
-                }
+                }, 20000);
             };
 
             const processScannedReference = async (ref) => {
@@ -827,7 +838,10 @@
                 backToDashboardBtn.addEventListener('click', showDashboard);
 
                 // --- Modais ---
-                document.querySelectorAll('[id^="cancel-"], #close-scanner-btn').forEach(btn => btn.addEventListener('click', () => btn.closest('.modal-backdrop').classList.add('hidden')));
+                document.getElementById('close-scanner-btn').addEventListener('click', stopScanner);
+                document.getElementById('cancel-usage-btn').addEventListener('click', () => registerUsageModal.classList.add('hidden'));
+                document.getElementById('cancel-edit-movement-btn').addEventListener('click', () => editMovementModal.classList.add('hidden'));
+                document.getElementById('cancel-action-btn').addEventListener('click', () => genericConfirmModal.classList.add('hidden'));
                 confirmActionBtn.addEventListener('click', () => {
                     if (confirmCallback) confirmCallback();
                     genericConfirmModal.classList.add('hidden');
@@ -923,9 +937,9 @@
                         loadingScreen.classList.add('hidden');
                         dashboardView.classList.remove('hidden');
 
-                        onSnapshot(query(collection(db, artigosPath)), snap => { allArtigos = snap.docs.map(d => ({id:d.id, ...d.data()})); filterAndRenderArtigos(); renderMovimentos(); });
-                        onSnapshot(query(collection(db, obrasPath)), snap => { allObras = snap.docs.map(d => ({id:d.id, ...d.data()})); filterAndRenderObras(); renderMovimentos(); });
-                        onSnapshot(query(collection(db, movimentosPath), orderBy('data_movimento', 'desc')), snap => { allMovimentos = snap.docs.map(d => ({id:d.id, ...d.data()})); renderMovimentos(); });
+                        onSnapshot(query(collection(db, artigosPath)), snap => { allArtigos = snap.docs.map(d => ({id:d.id, ...d.data()})); filterAndRenderArtigos(); if(tabPanes.movimentos.offsetParent !== null) renderMovimentos(); });
+                        onSnapshot(query(collection(db, obrasPath)), snap => { allObras = snap.docs.map(d => ({id:d.id, ...d.data()})); filterAndRenderObras(); if(tabPanes.movimentos.offsetParent !== null) renderMovimentos(); });
+                        onSnapshot(query(collection(db, movimentosPath), orderBy('data_movimento', 'desc')), snap => { allMovimentos = snap.docs.map(d => ({id:d.id, ...d.data()})); if(tabPanes.movimentos.offsetParent !== null) renderMovimentos(); });
                     }
                 });
                 await signInAnonymously(auth);
