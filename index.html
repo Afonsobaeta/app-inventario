@@ -1072,6 +1072,81 @@ confirmExportPdfBtn.addEventListener('click', () => {
         console.error("Erro ao gerar PDF:", error);
         showNotification('Ocorreu um erro ao gerar o PDF.', 'error');
     }
+});// Adiciona o evento de clique ao botão "Gerar PDF" dentro do modal (VERSÃO COM NÚMERO DA OBRA)
+confirmExportPdfBtn.addEventListener('click', () => {
+    try {
+        const { jsPDF } = window.jspdf;
+        if (!jsPDF || typeof jsPDF.API.autoTable !== 'function') {
+            showNotification('Erro: A biblioteca para gerar PDF (jsPDF ou autoTable) não foi carregada.', 'error');
+            return;
+        }
+
+        const doc = new jsPDF();
+        const filterRef = filterRefInput.value.toLowerCase().trim();
+        const startDate = filterStartDateInput.value ? new Date(filterStartDateInput.value) : null;
+        const endDate = filterEndDateInput.value ? new Date(filterEndDateInput.value) : null;
+
+        if (startDate) startDate.setHours(0, 0, 0, 0);
+        if (endDate) endDate.setHours(23, 59, 59, 999);
+
+        const filteredMovimentos = allMovimentos.filter(mov => {
+            const artigo = allArtigos.find(a => a.id === mov.artigo_id);
+            if (!artigo) return false;
+            const refMatch = filterRef ? artigo.referencia.toLowerCase().includes(filterRef) : true;
+            const movDate = new Date(mov.data_movimento.seconds * 1000);
+            const startDateMatch = startDate ? movDate >= startDate : true;
+            const endDateMatch = endDate ? movDate <= endDate : true;
+            return refMatch && startDateMatch && endDateMatch;
+        });
+
+        if (filteredMovimentos.length === 0) {
+            showNotification('Nenhum movimento encontrado para os filtros selecionados.', 'error');
+            return;
+        }
+
+        // --- ALTERAÇÃO 1: Atualizar o cabeçalho da tabela ---
+        const head = [['Data', 'Referência', 'Artigo', 'Qtd.', 'Obra (Nº - Nome)', 'Utilizador']];
+        
+        const body = filteredMovimentos.map(mov => {
+            const artigo = allArtigos.find(a => a.id === mov.artigo_id) || {};
+            const obra = allObras.find(o => o.id === mov.obra_id) || {};
+            
+            // --- ALTERAÇÃO 2: Formatar o texto da obra para incluir o número ---
+            const obraDisplay = obra.numero ? `${obra.numero} - ${obra.nome}` : (obra.nome || 'Obra Apagada');
+
+            return [
+                formatDate(mov.data_movimento),
+                artigo.referencia || 'N/A',
+                artigo.nome || 'Artigo Apagado',
+                mov.quantidade_gasta,
+                obraDisplay, // Usar a nova variável
+                mov.userName || 'Anónimo'
+            ];
+        });
+
+        doc.setFontSize(18);
+        doc.text('Relatório de Movimentos de Inventário', 14, 20);
+        doc.setFontSize(11);
+        doc.setTextColor(100);
+
+        doc.autoTable({
+            startY: 30,
+            head: head,
+            body: body,
+            theme: 'striped',
+            headStyles: { fillColor: [79, 70, 229] }
+        });
+
+        const today = new Date().toISOString().slice(0, 10);
+        doc.save(`relatorio_movimentos_${today}.pdf`);
+
+        exportPdfModal.classList.add('hidden');
+        showNotification('PDF gerado com sucesso!', 'success');
+
+    } catch (error) {
+        console.error("Erro ao gerar PDF:", error);
+        showNotification('Ocorreu um erro ao gerar o PDF.', 'error');
+    }
 });
                 
                 // --- Pesquisa de Obras nos Modais ---
