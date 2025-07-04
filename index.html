@@ -966,6 +966,114 @@
                     (obraId) => showConfirmModal('Eliminar Obra', 'Tem a certeza que deseja eliminar esta obra?', () => handleDeleteObra(obraId))
                 );
 
+                
+                // --- EXPORTAÇÃO PARA PDF ---
+
+// Seleciona os elementos do DOM necessários para a exportação
+const exportPdfBtn = document.getElementById('export-pdf-btn');
+const exportPdfModal = document.getElementById('export-pdf-modal');
+const confirmExportPdfBtn = document.getElementById('confirm-export-pdf-btn');
+const filterRefInput = document.getElementById('filter-ref');
+const filterStartDateInput = document.getElementById('filter-start-date');
+const filterEndDateInput = document.getElementById('filter-end-date');
+
+// Adiciona um evento ao botão principal para abrir o modal de filtros
+exportPdfBtn.addEventListener('click', () => {
+    // Limpa os filtros sempre que o modal é aberto
+    filterRefInput.value = '';
+    filterStartDateInput.value = '';
+    filterEndDateInput.value = '';
+    exportPdfModal.classList.remove('hidden');
+});
+
+// Adiciona o evento de clique ao botão "Gerar PDF" dentro do modal
+confirmExportPdfBtn.addEventListener('click', () => {
+    try {
+        // As bibliotecas jsPDF são carregadas globalmente, por isso acedemo-las através do objeto window
+        const { jsPDF } = window.jspdf;
+        if (!jsPDF || !doc.autoTable) {
+            showNotification('Erro: A biblioteca para gerar PDF não foi carregada corretamente.', 'error');
+            return;
+        }
+
+        // 1. Obter os valores dos filtros do modal
+        const filterRef = filterRefInput.value.toLowerCase().trim();
+        const startDate = filterStartDateInput.value ? new Date(filterStartDateInput.value) : null;
+        const endDate = filterEndDateInput.value ? new Date(filterEndDateInput.value) : null;
+
+        // Ajusta as datas para garantir que a comparação inclui o dia inteiro
+        if (startDate) startDate.setHours(0, 0, 0, 0);
+        if (endDate) endDate.setHours(23, 59, 59, 999);
+
+        // 2. Filtrar a lista de movimentos com base nos filtros
+        const filteredMovimentos = allMovimentos.filter(mov => {
+            const artigo = allArtigos.find(a => a.id === mov.artigo_id);
+            if (!artigo) return false; // Ignora movimentos de artigos que possam ter sido eliminados
+
+            // Verifica a correspondência com a referência
+            const refMatch = filterRef ? artigo.referencia.toLowerCase().includes(filterRef) : true;
+
+            // Verifica a correspondência com o intervalo de datas
+            const movDate = new Date(mov.data_movimento.seconds * 1000);
+            const startDateMatch = startDate ? movDate >= startDate : true;
+            const endDateMatch = endDate ? movDate <= endDate : true;
+
+            return refMatch && startDateMatch && endDateMatch;
+        });
+
+        if (filteredMovimentos.length === 0) {
+            showNotification('Nenhum movimento encontrado para os filtros selecionados.', 'error');
+            return;
+        }
+
+        // 3. Criar o documento PDF
+        const doc = new jsPDF();
+        
+        // Define o cabeçalho da tabela
+        const head = [['Data', 'Referência', 'Artigo', 'Qtd.', 'Obra', 'Utilizador']];
+        
+        // Mapeia os dados dos movimentos filtrados para o corpo da tabela
+        const body = filteredMovimentos.map(mov => {
+            const artigo = allArtigos.find(a => a.id === mov.artigo_id) || {};
+            const obra = allObras.find(o => o.id === mov.obra_id) || {};
+            return [
+                formatDate(mov.data_movimento),
+                artigo.referencia || 'N/A',
+                artigo.nome || 'Artigo Apagado',
+                mov.quantidade_gasta,
+                obra.nome || 'Obra Apagada',
+                mov.userName || 'Anónimo'
+            ];
+        });
+
+        // Adiciona um título ao documento
+        doc.setFontSize(18);
+        doc.text('Relatório de Movimentos de Inventário', 14, 20);
+        doc.setFontSize(11);
+        doc.setTextColor(100);
+        
+        // Utiliza o plugin autoTable para criar a tabela
+        doc.autoTable({
+            startY: 30,
+            head: head,
+            body: body,
+            theme: 'striped',
+            headStyles: { fillColor: [79, 70, 229] } // Cor indigo, para combinar com a app
+        });
+
+        // 4. Guardar o PDF com um nome de ficheiro dinâmico
+        const today = new Date().toISOString().slice(0, 10);
+        doc.save(`relatorio_movimentos_${today}.pdf`);
+
+        // 5. Fechar o modal e mostrar uma notificação de sucesso
+        exportPdfModal.classList.add('hidden');
+        showNotification('PDF gerado com sucesso!', 'success');
+
+    } catch (error) {
+        console.error("Erro ao gerar PDF:", error);
+        showNotification('Ocorreu um erro ao gerar o PDF.', 'error');
+    }
+});
                 // --- Pesquisa de Obras nos Modais ---
                 const setupObraSearch = (searchInput, dropdown, selectedIdInput) => {
                     searchInput.addEventListener('input', (e) => {
